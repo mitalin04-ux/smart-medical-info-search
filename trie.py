@@ -1,6 +1,10 @@
+import os
 import pandas as pd
 
-df = pd.read_csv("medical_dataset.csv")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATASET_PATH = os.path.join(BASE_DIR, "medical_dataset.csv")
+
+df = pd.read_csv(DATASET_PATH)
 
 
 class TrieNode:

@@ -6,7 +6,13 @@ from binary_search import binary_search, df as bs_df
 from trie import trie
 from kmp import kmp_search, df as raw_df
 
-app = Flask(__name__, template_folder="templates", static_folder="static")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, "templates"),
+    static_folder=os.path.join(BASE_DIR, "static")
+)
 
 # Medical dataset references
 # bs_df is already sorted by Disease Name in binary_search.py

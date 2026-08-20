@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Medical Search — Intelligent Algorithm-Powered Medical Knowledge</title>
+  <meta name="description" content="A clinical medical search engine powered by Trie autocomplete, Binary Search disease lookup, and Knuth-Morris-Pratt symptom pattern matching." />
+  
+  <!-- Typography: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <!-- Floating Sticky Navbar -->
+  <header class="site-header" id="navbar">
+    <div class="header-inner">
+      <a href="#home" class="brand-link" aria-label="Smart Medical Search Home">
+        <div class="brand-logo-wrap">
+          <svg class="icon-brand" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <div class="brand-name-group">
+          <span class="brand-name">Smart Medical Search</span>
+        </div>
+      </a>
+
+      <nav class="nav-links" aria-label="Main Navigation">
+        <a href="#home" class="nav-item active">Home</a>
+        <a href="#search-section" class="nav-item">Disease Search</a>
+        <a href="#kmp-section" class="nav-item">Symptom Search (KMP)</a>
+        <a href="#how-it-works" class="nav-item">How It Works</a>
+        <a href="#algorithms-section" class="nav-item">Algorithms</a>
+        <a href="#dataset-section" class="nav-item">Dataset</a>
+      </nav>
+
+      <div class="header-action">
+        <span class="engine-status-tag">
+          <span class="status-indicator-dot"></span>
+          <span>Engine Active</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Viewport Content -->
+  <main class="main-body" id="home">
+    <div class="page-container">
+
+      <!-- Hero Section -->
+      <section class="hero-section">
+        <div class="hero-badge-wrap">
+          <span class="hero-eyebrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+            Algorithm-Powered Search Engine
+          </span>
+        </div>
+        <h1 class="hero-main-title">Search Smarter. Understand Better.</h1>
+        <p class="hero-lead">
+          Find disease information and discover relevant clinical records using efficient search algorithms.
+        </p>
+      </section>
+
+      <!-- Main Unified / Disease Search Component -->
+      <section class="search-experience-section" id="search-section">
+        <div class="search-box-card">
+          
+          <!-- Large Search Box -->
+          <form id="search-form" class="search-form" onsubmit="return false;">
+            <div class="search-input-container">
+              <div class="search-icon-prefix">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </div>
+
+              <input
+                type="text"
+                id="search-input"
+                class="hero-search-input"
+                placeholder="Search disease, symptom or keyword..."
+                autocomplete="off"
+                aria-label="Medical Search Input"
+              />
+
+              <button type="button" id="clear-btn" class="btn-clear-search" title="Clear input" style="display: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+
+              <button type="submit" id="search-btn" class="btn-search-primary">
+                <span>Search</span>
+              </button>
+            </div>
+
+            <!-- Floating Trie Autocomplete Dropdown -->
+            <div id="autocomplete-dropdown" class="autocomplete-floating-menu" style="display: none;">
+              <div class="dropdown-top-meta">
+                <span class="dropdown-label">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                  Trie Suggestions
+                </span>
+                <span id="suggestion-count" class="suggestion-count-pill">0 found</span>
+              </div>
+              <ul id="suggestions-list" class="suggestions-items-list" role="listbox"></ul>
+            </div>
+          </form>
+
+          <!-- Search Mode Segmented Control -->
+          <div class="search-options-row">
+            <div class="segmented-control-group">
+              <span class="segmented-control-label">Search using:</span>
+              <div class="segmented-control" role="tablist" aria-label="Search Mode">
+                <button type="button" class="segment-btn active" data-mode="smart" role="tab" aria-selected="true">
+                  <span class="segment-dot"></span>
+                  Smart Search
+                </button>
+                <button type="button" class="segment-btn" data-mode="disease" role="tab" aria-selected="false">
+                  Exact Disease
+                </button>
+                <button type="button" class="segment-btn" data-mode="symptom" role="tab" aria-selected="false">
+                  Symptoms / Keyword
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Popular Searches Pills -->
+          <div class="popular-queries-row">
+            <span class="popular-label">Try searching:</span>
+            <div class="popular-pills-wrap">
+              <button type="button" class="query-chip" data-query="Diabetes Mellitus" data-mode="disease">Diabetes</button>
+              <button type="button" class="query-chip" data-query="fever" data-mode="symptom">Fever</button>
+              <button type="button" class="query-chip" data-query="cough" data-mode="symptom">Cough</button>
+              <button type="button" class="query-chip" data-query="headache" data-mode="symptom">Headache</button>
+              <button type="button" class="query-chip" data-query="fatigue" data-mode="symptom">Fatigue</button>
+              <button type="button" class="query-chip" data-query="joint pain" data-mode="symptom">Joint Pain</button>
+              <button type="button" class="query-chip" data-query="Asthma" data-mode="disease">Asthma</button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Active Algorithm Indicator Bar -->
+      <section class="active-algo-indicator-section">
+        <div class="active-algo-grid">
+          <div class="algo-pill-card" id="pill-trie">
+            <div class="algo-pill-head">
+              <span class="algo-icon">🔤</span>
+              <span class="algo-title">TRIE</span>
+            </div>
+            <span class="algo-sub">Autocomplete</span>
+            <span class="active-tag" style="display: none;">✓ Active</span>
+          </div>
+
+          <div class="algo-pill-card" id="pill-bs">
+            <div class="algo-pill-head">
+              <span class="algo-icon">⚡</span>
+              <span class="algo-title">BINARY SEARCH</span>
+            </div>
+            <span class="algo-sub">Exact Disease</span>
+            <span class="active-tag" style="display: none;">✓ Active</span>
+          </div>
+
+          <div class="algo-pill-card" id="pill-kmp">
+            <div class="algo-pill-head">
+              <span class="algo-icon">🔎</span>
+              <span class="algo-title">KMP ALGORITHM</span>
+            </div>
+            <span class="algo-sub">Symptom Search</span>
+            <span class="active-tag" style="display: none;">✓ Active</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main Search Results Area -->
+      <section class="search-results-section" id="results-section" aria-live="polite">
+
+        <!-- 1. Empty State (Initial) -->
+        <div class="state-card empty-state" id="state-initial">
+          <div class="empty-state-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </div>
+          <h3 class="empty-state-title">What are you looking for?</h3>
+          <p class="empty-state-desc">
+            Search for a disease, symptom or keyword to explore the medical database.
+          </p>
+          <div class="empty-suggestions-hint">
+            <span>Try: </span>
+            <button type="button" class="hint-link" data-query="Diabetes Mellitus" data-mode="disease">Diabetes</button>
+            <span>•</span>
+            <button type="button" class="hint-link" data-query="fever" data-mode="symptom">Fever</button>
+            <span>•</span>
+            <button type="button" class="hint-link" data-query="cough" data-mode="symptom">Cough</button>
+          </div>
+        </div>
+
+        <!-- 2. Loading State -->
+        <div class="state-card loading-state" id="state-loading" style="display: none;">
+          <div class="clinical-loader"></div>
+          <h3 class="loading-state-title">Searching the medical database...</h3>
+          <div class="loading-pipeline-chips">
+            <span class="pipe-chip">Trie</span>
+            <span class="pipe-sep">→</span>
+            <span class="pipe-chip">Search</span>
+            <span class="pipe-sep">→</span>
+            <span class="pipe-chip">Result</span>
+          </div>
+        </div>
+
+        <!-- 3. Disease Found State (Two-Column Layout) -->
+        <div class="state-card-wrapper" id="state-disease-found" style="display: none;">
+          <div class="results-header-bar">
+            <div class="results-title-group">
+              <h2 class="results-heading">Medical Information</h2>
+              <span class="result-status-badge success">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Result found
+              </span>
+            </div>
+          </div>
+
+          <!-- Two-Column Layout: Left (Medical Info) | Right (Search Analysis) -->
+          <div class="two-column-result-grid">
+            
+            <!-- LEFT COLUMN: Medical Information Card -->
+            <div class="medical-info-column">
+              <div class="medical-condition-card">
+                <div class="condition-card-header">
+                  <div class="condition-badge-wrap">
+                    <div class="condition-avatar">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/>
+                        <path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/>
+                        <circle cx="20" cy="10" r="2"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 class="condition-name" id="res-disease-name">Diabetes Mellitus</h3>
+                      <div class="condition-meta-row">
+                        <span class="meta-label">DISEASE ID</span>
+                        <span class="condition-id-pill" id="res-disease-id">D1080</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="condition-card-body">
+                  <!-- Symptoms -->
+                  <div class="info-card-section">
+                    <div class="info-section-title">
+                      <span class="sec-icon">🩹</span>
+                      <h4>SYMPTOMS</h4>
+                    </div>
+                    <div class="symptom-chips-container" id="res-symptoms-list"></div>
+                  </div>
+
+                  <!-- 2x2 Structured Cards -->
+                  <div class="info-sections-grid">
+                    <!-- Causes -->
+                    <div class="info-detail-box">
+                      <div class="info-section-title">
+                        <span class="sec-icon">⚠️</span>
+                        <h4>CAUSES</h4>
+                      </div>
+                      <p class="detail-text" id="res-causes-text"></p>
+                    </div>
+
+                    <!-- Treatment -->
+                    <div class="info-detail-box">
+                      <div class="info-section-title">
+                        <span class="sec-icon">💊</span>
+                        <h4>TREATMENT</h4>
+                      </div>
+                      <p class="detail-text" id="res-treatment-text"></p>
+                    </div>
+
+                    <!-- Prevention -->
+                    <div class="info-detail-box">
+                      <div class="info-section-title">
+                        <span class="sec-icon">🛡️</span>
+                        <h4>PREVENTION</h4>
+                      </div>
+                      <p class="detail-text" id="res-prevention-text"></p>
+                    </div>
+
+                    <!-- Associated Medicine -->
+                    <div class="info-detail-box">
+                      <div class="info-section-title">
+                        <span class="sec-icon">💉</span>
+                        <h4>ASSOCIATED MEDICINE</h4>
+                      </div>
+                      <div class="medicine-val-pill" id="res-associated-med">Not Available</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Algorithm Analysis Card -->
+            <div class="analysis-column">
+              <div class="search-analysis-card">
+                <div class="analysis-card-header">
+                  <div class="analysis-title-group">
+                    <span class="analysis-icon">⚡</span>
+                    <h3 class="analysis-heading">Search Analysis</h3>
+                  </div>
+                </div>
+
+                <div class="analysis-metrics-list">
+                  <div class="metric-row">
+                    <span class="metric-key">Algorithm</span>
+                    <span class="metric-val" id="diag-algo">Binary Search</span>
+                  </div>
+
+                  <div class="metric-row">
+                    <span class="metric-key">Status</span>
+                    <span class="metric-val status-confirmed" id="diag-status">✓ Found</span>
+                  </div>
+
+                  <div class="metric-row">
+                    <span class="metric-key">Comparisons</span>
+                    <span class="metric-val metric-highlight" id="diag-comps">4</span>
+                  </div>
+
+                  <div class="metric-row">
+                    <span class="metric-key">Complexity</span>
+                    <span class="metric-val code-val" id="diag-complexity">O(log n)</span>
+                  </div>
+                </div>
+
+                <div class="analysis-card-footer">
+                  <p class="analysis-note">Metrics calculated live by backend algorithm.</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 4. Symptom Search Results (KMP Results Grid + Analysis Card) -->
+        <div class="state-card-wrapper" id="state-symptom-found" style="display: none;">
+          <div class="results-header-bar">
+            <div class="results-title-group">
+              <h2 class="results-heading">Matching Conditions</h2>
+              <span class="result-status-badge success">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span id="symptom-status-text">Matches found</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="two-column-result-grid">
+            <!-- Left: Grid of condition cards -->
+            <div class="medical-info-column">
+              <div class="symptom-cards-grid" id="symptom-cards-grid"></div>
+            </div>
+
+            <!-- Right: KMP Analysis Card -->
+            <div class="analysis-column">
+              <div class="search-analysis-card">
+                <div class="analysis-card-header">
+                  <div class="analysis-title-group">
+                    <span class="analysis-icon">🔎</span>
+                    <h3 class="analysis-heading">Search Analysis</h3>
+                  </div>
+                </div>
+
+                <div class="analysis-metrics-list">
+                  <div class="metric-row">
+                    <span class="metric-key">Algorithm</span>
+                    <span class="metric-val">KMP</span>
+                  </div>
+
+                  <div class="metric-row">
+                    <span class="metric-key">Keyword</span>
+                    <span class="metric-val code-val" id="kmp-keyword">fever</span>
+                  </div>
+
+                  <div class="metric-row">
+                    <span class="metric-key">Matching Records</span>
+                    <span class="metric-val metric-highlight" id="symptom-match-count">0</span>
+                  </div>
+
+                  <div class="metric-row">
+                    <span class="metric-key">Total Comparisons</span>
+                    <span class="metric-val metric-highlight" id="symptom-total-comps">0</span>
+                  </div>
+
+                  <div class="metric-row">
+                    <span class="metric-key">Complexity</span>
+                    <span class="metric-val code-val">O(n + m)</span>
+                  </div>
+                </div>
+
+                <div class="analysis-card-footer">
+                  <p class="analysis-note">Scanned 30 symptom records with LPS jump table.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. No Result State -->
+        <div class="state-card not-found-state" id="state-not-found" style="display: none;">
+          <div class="not-found-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+          </div>
+          <h3 class="not-found-title">No results found</h3>
+          <p class="not-found-desc">
+            We couldn't find matching medical information for your query. Try a different disease name, symptom or keyword.
+          </p>
+          <div class="not-found-actions">
+            <button type="button" class="btn-clear-action" id="btn-clear-search-view">Clear Search</button>
+            <button type="button" class="btn-try-symptom-action" id="btn-try-symptom">Search as Symptom Keyword →</button>
+          </div>
+        </div>
+
+        <!-- 6. Empty Input State -->
+        <div class="state-card not-found-state" id="state-empty" style="display: none;">
+          <div class="not-found-icon">ℹ️</div>
+          <h3 class="not-found-title">Search query required</h3>
+          <p class="not-found-desc">Please enter a disease, symptom, or keyword in the search bar.</p>
+        </div>
+
+        <!-- 7. Error State -->
+        <div class="state-card not-found-state" id="state-error" style="display: none;">
+          <div class="not-found-icon">⚠️</div>
+          <h3 class="not-found-title">Service Connection Error</h3>
+          <p class="not-found-desc">Unable to connect to the medical search backend service. Please try again.</p>
+        </div>
+
+      </section>
+
+      <!-- ================================================================
+           DEDICATED KMP SYMPTOM SEARCH SECTION
+           ================================================================ -->
+      <section class="kmp-dedicated-section" id="kmp-section">
+        <div class="section-title-wrap">
+          <span class="section-eyebrow">KEYWORD PATTERN MATCHING</span>
+          <h2 class="section-heading">🔎 Search by Symptoms</h2>
+          <p class="section-subheading">Find relevant diseases by searching symptoms or medical keywords.</p>
+        </div>
+
+        <!-- KMP Search Card -->
+        <div class="kmp-search-card">
+          <div class="kmp-card-top-info">
+            <div class="kmp-badge-tag">
+              <span class="kmp-dot"></span>
+              <span>KMP String Matching Engine</span>
+            </div>
+            <h3 class="kmp-search-title">🔎 Search Symptoms or Keywords</h3>
+            <p class="kmp-search-desc">Search the symptoms field of our medical database.</p>
+          </div>
+
+          <!-- KMP Search Input Form -->
+          <form id="kmp-search-form" class="kmp-search-form" onsubmit="return false;">
+            <div class="kmp-input-row">
+              <div class="kmp-input-wrap">
+                <span class="kmp-input-icon">🔍</span>
+                <input
+                  type="text"
+                  id="kmp-search-input"
+                  class="kmp-input"
+                  placeholder="Enter a symptom or keyword (e.g. fever, cough, joint pain, fatigue)..."
+                  autocomplete="off"
+                  aria-label="Symptom or keyword search input"
+                />
+                <button type="button" id="kmp-clear-btn" class="kmp-clear-btn" title="Clear input" style="display: none;">✕</button>
+              </div>
+              <button type="submit" id="kmp-submit-btn" class="btn-kmp-search">
+                <span>🔎 SEARCH WITH KMP</span>
+              </button>
+            </div>
+          </form>
+
+          <!-- KMP Quick Example Pills -->
+          <div class="kmp-quick-pills-row">
+            <span class="kmp-try-label">Try:</span>
+            <div class="kmp-pills-group">
+              <button type="button" class="kmp-chip" data-symptom="Fever">Fever</button>
+              <button type="button" class="kmp-chip" data-symptom="Cough">Cough</button>
+              <button type="button" class="kmp-chip" data-symptom="Headache">Headache</button>
+              <button type="button" class="kmp-chip" data-symptom="Fatigue">Fatigue</button>
+              <button type="button" class="kmp-chip" data-symptom="Joint Pain">Joint Pain</button>
+              <button type="button" class="kmp-chip" data-symptom="Dizziness">Dizziness</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dedicated KMP Results & Telemetry Display Area -->
+        <div class="kmp-results-display-area" id="kmp-results-area">
+          
+          <!-- KMP State: Empty / Initial -->
+          <div class="kmp-state-box kmp-empty-state" id="kmp-state-initial">
+            <div class="kmp-state-icon">🔎</div>
+            <h4 class="kmp-state-heading">Search for a symptom or keyword</h4>
+            <p class="kmp-state-text">
+              Enter something like <strong>"fever"</strong>, <strong>"cough"</strong>, or <strong>"headache"</strong> to find matching diseases across the entire database.
+            </p>
+          </div>
+
+          <!-- KMP State: Loading -->
+          <div class="kmp-state-box kmp-loading-state" id="kmp-state-loading" style="display: none;">
+            <div class="clinical-loader"></div>
+            <h4 class="kmp-state-heading">Searching symptoms...</h4>
+            <div class="kmp-pipeline-steps">
+              <span class="kmp-step-chip">KMP</span>
+              <span class="kmp-step-arrow">↓</span>
+              <span class="kmp-step-chip">Pattern Matching</span>
+              <span class="kmp-step-arrow">↓</span>
+              <span class="kmp-step-chip">Searching Medical Records</span>
+            </div>
+          </div>
+
+          <!-- KMP State: Results Found -->
+          <div class="kmp-state-box-wrapper" id="kmp-state-found" style="display: none;">
+            
+            <!-- ⚡ KMP SEARCH ANALYSIS Card -->
+            <div class="kmp-analysis-banner-card">
+              <div class="kmp-analysis-header">
+                <div class="analysis-brand">
+                  <span class="analysis-bolt">⚡</span>
+                  <h4>KMP SEARCH ANALYSIS</h4>
+                </div>
+                <span class="kmp-status-pill">✓ Search Completed</span>
+              </div>
+
+              <div class="kmp-metrics-horizontal-grid">
+                <div class="kmp-metric-item">
+                  <span class="kmp-m-lbl">Algorithm</span>
+                  <span class="kmp-m-val">KMP</span>
+                </div>
+                <div class="kmp-metric-item">
+                  <span class="kmp-m-lbl">Keyword</span>
+                  <span class="kmp-m-val code-val" id="kmp-active-keyword">fever</span>
+                </div>
+                <div class="kmp-metric-item">
+                  <span class="kmp-m-lbl">Matching Records</span>
+                  <span class="kmp-m-val highlight-val" id="kmp-active-records">7</span>
+                </div>
+                <div class="kmp-metric-item">
+                  <span class="kmp-m-lbl">Total Comparisons</span>
+                  <span class="kmp-m-val highlight-val" id="kmp-active-comps">342</span>
+                </div>
+                <div class="kmp-metric-item">
+                  <span class="kmp-m-lbl">Complexity</span>
+                  <span class="kmp-m-val code-val">O(n + m)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Matching Medical Information Heading -->
+            <div class="kmp-results-header">
+              <h3 class="kmp-results-title">## 🔎 Matching Medical Information</h3>
+              <p class="kmp-results-sub" id="kmp-results-subtitle">Found matching conditions based on symptom keyword search</p>
+            </div>
+
+            <!-- Grid of Individual Modern Medical Cards -->
+            <div class="kmp-cards-grid" id="kmp-cards-grid"></div>
+          </div>
+
+          <!-- KMP State: No Matches -->
+          <div class="kmp-state-box kmp-not-found-state" id="kmp-state-not-found" style="display: none;">
+            <div class="kmp-state-icon">🔎</div>
+            <h4 class="kmp-state-heading">No matching medical information found</h4>
+            <p class="kmp-state-text" id="kmp-not-found-msg">
+              We couldn't find any disease containing the entered keyword. Try another symptom or keyword.
+            </p>
+            <div class="kmp-not-found-suggestions">
+              <span>Try: </span>
+              <button type="button" class="kmp-chip-link" data-symptom="Fever">Fever</button>
+              <span>•</span>
+              <button type="button" class="kmp-chip-link" data-symptom="Cough">Cough</button>
+              <span>•</span>
+              <button type="button" class="kmp-chip-link" data-symptom="Fatigue">Fatigue</button>
+            </div>
+          </div>
+
+          <!-- KMP State: Error -->
+          <div class="kmp-state-box kmp-not-found-state" id="kmp-state-error" style="display: none;">
+            <div class="kmp-state-icon">⚠️</div>
+            <h4 class="kmp-state-heading">Service Unavailable</h4>
+            <p class="kmp-state-text">Unable to connect to the medical search service. Please try again.</p>
+          </div>
+
+        </div>
+
+        <!-- How KMP Searches Symptoms Visual Flow -->
+        <div class="kmp-explanation-block">
+          <h3 class="kmp-block-title">How KMP Searches Symptoms</h3>
+          <p class="kmp-block-desc">Understanding the linear pattern matching workflow behind symptom search.</p>
+
+          <div class="kmp-flow-vertical-chain">
+            <div class="flow-chain-node">
+              <span class="chain-step-num">1</span>
+              <span class="chain-step-text">USER ENTERS KEYWORD</span>
+            </div>
+            <div class="chain-arrow">↓</div>
+            <div class="flow-chain-node">
+              <span class="chain-step-num">2</span>
+              <span class="chain-step-text">KMP receives the pattern</span>
+            </div>
+            <div class="chain-arrow">↓</div>
+            <div class="flow-chain-node">
+              <span class="chain-step-num">3</span>
+              <span class="chain-step-text">Searches the Symptoms field</span>
+            </div>
+            <div class="chain-arrow">↓</div>
+            <div class="flow-chain-node highlighted">
+              <span class="chain-step-num">4</span>
+              <span class="chain-step-text">Uses LPS to avoid unnecessary comparisons</span>
+            </div>
+            <div class="chain-arrow">↓</div>
+            <div class="flow-chain-node">
+              <span class="chain-step-num">5</span>
+              <span class="chain-step-text">Matching diseases are found</span>
+            </div>
+            <div class="chain-arrow">↓</div>
+            <div class="flow-chain-node success-node">
+              <span class="chain-step-num">6</span>
+              <span class="chain-step-text">Medical results are displayed</span>
+            </div>
+          </div>
+
+          <!-- KMP Algorithm Pattern Matching Demonstration & LPS Card -->
+          <div class="kmp-demo-grid">
+            <!-- Pattern Matching Visual Demo Card -->
+            <div class="kmp-demo-card">
+              <div class="demo-card-head">
+                <span class="demo-icon">🔬</span>
+                <h4>KMP Pattern Matching</h4>
+              </div>
+              <p class="demo-card-sub">Visualizing substring alignment without text backtracking:</p>
+
+              <div class="demo-visual-box">
+                <div class="demo-row">
+                  <span class="demo-lbl">TEXT:</span>
+                  <span class="demo-val">"High <mark class="demo-mark">fever</mark> and headache"</span>
+                </div>
+                <div class="demo-row">
+                  <span class="demo-lbl">PATTERN:</span>
+                  <span class="demo-val mono-pattern">"f e v e r"</span>
+                </div>
+                <div class="demo-alignment-line">───────────────</div>
+                <div class="demo-match-result">
+                  <span class="match-arrow">↓</span>
+                  <span class="match-badge">MATCH FOUND ✓</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Expandable LPS Explanation Card -->
+            <div class="kmp-demo-card lps-card">
+              <div class="demo-card-head">
+                <span class="demo-icon">📑</span>
+                <h4>What is LPS?</h4>
+              </div>
+              <p class="lps-explanation-text">
+                "LPS stands for <strong>Longest Prefix Suffix</strong>. KMP uses the LPS array to know how far it can move the pattern when a mismatch occurs, avoiding unnecessary comparisons."
+              </p>
+
+              <div class="lps-example-box">
+                <div class="lps-row">
+                  <span class="lps-key">Pattern:</span>
+                  <div class="lps-chars-row">
+                    <span class="lps-char">A</span>
+                    <span class="lps-char">B</span>
+                    <span class="lps-char">A</span>
+                    <span class="lps-char">B</span>
+                  </div>
+                </div>
+                <div class="lps-row">
+                  <span class="lps-key">LPS:</span>
+                  <div class="lps-chars-row">
+                    <span class="lps-num">0</span>
+                    <span class="lps-num">0</span>
+                    <span class="lps-num">1</span>
+                    <span class="lps-num">2</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Educational Disclaimer Banner below results -->
+      <div class="disclaimer-inline-box">
+        <div class="disclaimer-content">
+          <strong>Educational Disclaimer:</strong> This system is designed for educational and informational purposes only. It is not intended to diagnose, treat, cure, or prevent any medical condition. Please consult a qualified healthcare professional for medical concerns.
+        </div>
+      </div>
+
+      <!-- How It Works Section -->
+      <section class="how-it-works-section" id="how-it-works">
+        <div class="section-title-wrap">
+          <span class="section-eyebrow">SYSTEM ARCHITECTURE</span>
+          <h2 class="section-heading">How Smart Medical Search Works</h2>
+          <p class="section-subheading">Three algorithms work together to make medical information easier to find.</p>
+        </div>
+
+        <div class="visual-flow-container">
+          <!-- Flow Top: Search Query -->
+          <div class="flow-step-node node-query">
+            <div class="node-inner">
+              <span class="node-icon">🔍</span>
+              <span class="node-title">SEARCH</span>
+            </div>
+          </div>
+
+          <!-- Flow Branching Arrows -->
+          <div class="flow-connectors-branch">
+            <div class="branch-stem-v"></div>
+            <div class="branch-cross-h"></div>
+            <div class="branch-drops-row">
+              <span class="drop-arrow">↓</span>
+              <span class="drop-arrow">↓</span>
+              <span class="drop-arrow">↓</span>
+            </div>
+          </div>
+
+          <!-- Flow Middle: Three Algorithms -->
+          <div class="flow-algorithms-grid">
+            <div class="flow-algo-card">
+              <div class="algo-card-badge">🔤 TRIE</div>
+              <h4 class="algo-card-name">Prefix Matching</h4>
+              <p class="algo-card-desc">Traverses tree in real-time to provide live disease name suggestions.</p>
+            </div>
+
+            <div class="flow-algo-card highlight-card">
+              <div class="algo-card-badge">⚡ BINARY SEARCH</div>
+              <h4 class="algo-card-name">Exact Disease Lookup</h4>
+              <p class="algo-card-desc">Halves search space on sorted dataset to locate diseases in logarithmic time.</p>
+            </div>
+
+            <div class="flow-algo-card">
+              <div class="algo-card-badge">🔎 KMP</div>
+              <h4 class="algo-card-name">Keyword / Symptom Matching</h4>
+              <p class="algo-card-desc">Utilizes precomputed LPS table to match keywords in multi-symptom texts.</p>
+            </div>
+          </div>
+
+          <!-- Flow Convergence -->
+          <div class="flow-converge-branch">
+            <div class="converge-cross-h"></div>
+            <div class="converge-stem-v"></div>
+            <span class="converge-arrow">↓</span>
+          </div>
+
+          <!-- Flow Bottom: Medical Result -->
+          <div class="flow-step-node node-result">
+            <div class="node-inner">
+              <span class="node-icon">🩺</span>
+              <span class="node-title">MEDICAL RESULT</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Algorithm Detail Cards Section -->
+      <section class="algo-cards-section" id="algorithms-section">
+        <div class="section-title-wrap">
+          <span class="section-eyebrow">CORE ALGORITHMS</span>
+          <h2 class="section-heading">Algorithm Specifications</h2>
+          <p class="section-subheading">Native Python implementations powering intelligent medical information retrieval.</p>
+        </div>
+
+        <div class="three-cards-grid">
+          <!-- 1. Trie -->
+          <div class="algo-feature-card">
+            <div class="feature-card-header">
+              <div class="feature-icon-box">🔤</div>
+              <div>
+                <h3 class="feature-title">TRIE</h3>
+                <span class="feature-subtitle">Prefix Matching</span>
+              </div>
+            </div>
+            <p class="feature-text">
+              Powers disease autocomplete by finding disease names that match the entered prefix.
+            </p>
+            <div class="feature-meta-list">
+              <div class="meta-item">
+                <span class="meta-k">Purpose:</span>
+                <span class="meta-v">Autocomplete</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-k">Complexity:</span>
+                <span class="meta-v code-tag">O(k)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Binary Search -->
+          <div class="algo-feature-card">
+            <div class="feature-card-header">
+              <div class="feature-icon-box bs-box">⚡</div>
+              <div>
+                <h3 class="feature-title">BINARY SEARCH</h3>
+                <span class="feature-subtitle">Exact Disease Lookup</span>
+              </div>
+            </div>
+            <p class="feature-text">
+              Searches the alphabetically sorted disease list efficiently.
+            </p>
+            <div class="feature-meta-list">
+              <div class="meta-item">
+                <span class="meta-k">Purpose:</span>
+                <span class="meta-v">Disease Search</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-k">Complexity:</span>
+                <span class="meta-v code-tag">O(log n)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. KMP with TRY KMP button -->
+          <div class="algo-feature-card highlight-feature">
+            <div class="feature-card-header">
+              <div class="feature-icon-box kmp-box">🔎</div>
+              <div>
+                <h3 class="feature-title">KMP</h3>
+                <span class="feature-subtitle">Keyword / Symptom Matching</span>
+              </div>
+            </div>
+            <p class="feature-text">
+              Searches for symptoms and keywords inside medical records using efficient pattern matching.
+            </p>
+            <div class="feature-meta-list">
+              <div class="meta-item">
+                <span class="meta-k">Purpose:</span>
+                <span class="meta-v">Symptom Search</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-k">Complexity:</span>
+                <span class="meta-v code-tag">O(n + m)</span>
+              </div>
+            </div>
+            <div class="card-action-bottom">
+              <a href="#kmp-section" class="btn-try-kmp-scroll">TRY KMP →</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dataset Insights Section -->
+      <section class="dataset-insights-section" id="dataset-section">
+        <div class="section-title-wrap">
+          <span class="section-eyebrow">REPOSITORY</span>
+          <h2 class="section-heading">Medical Dataset</h2>
+          <p class="section-subheading">
+            The system searches a structured medical dataset containing disease names, symptoms, causes, treatment, prevention and associated medicine information.
+          </p>
+        </div>
+
+        <div class="stats-overview-grid">
+          <div class="stat-card">
+            <span class="stat-big-num">30</span>
+            <span class="stat-label">Diseases</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-big-num">3</span>
+            <span class="stat-label">Algorithms</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-big-num">8</span>
+            <span class="stat-label">Data Fields</span>
+          </div>
+        </div>
+
+        <!-- Collapsible Dataset Preview -->
+        <div class="dataset-accordion-wrap">
+          <button type="button" class="btn-toggle-dataset" id="btn-toggle-dataset" aria-expanded="false">
+            <span class="toggle-icon">▸</span>
+            <span>View Medical Dataset Table</span>
+          </button>
+
+          <div class="dataset-collapsible-content" id="dataset-collapsible" style="display: none;">
+            <div class="dataset-filter-bar">
+              <input type="text" id="dataset-filter" class="dataset-search-input" placeholder="Filter medical records..." />
+            </div>
+
+            <div class="table-scroll-container">
+              <table class="medical-preview-table">
+                <thead>
+                  <tr>
+                    <th>Disease ID</th>
+                    <th>Disease Name</th>
+                    <th>Symptoms</th>
+                    <th>Causes</th>
+                    <th>Treatment</th>
+                    <th>Prevention</th>
+                    <th>Associated Medicine</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="dataset-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Full Condition Details Modal -->
+  <div class="modal-backdrop" id="detail-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modal-disease-name">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-id-pill" id="modal-disease-id">D1000</span>
+          <h3 class="modal-heading" id="modal-disease-name">Condition Name</h3>
+        </div>
+        <button type="button" class="btn-modal-close-icon" id="modal-close" aria-label="Close dialog">✕</button>
+      </div>
+
+      <div class="modal-body-scroll">
+        <div class="modal-fields-grid">
+          <div class="modal-field full-span">
+            <span class="field-lbl">🩹 SYMPTOMS</span>
+            <p class="field-val" id="modal-symptoms"></p>
+          </div>
+          <div class="modal-field">
+            <span class="field-lbl">⚠️ CAUSES</span>
+            <p class="field-val" id="modal-causes"></p>
+          </div>
+          <div class="modal-field">
+            <span class="field-lbl">💊 TREATMENT</span>
+            <p class="field-val" id="modal-treatment"></p>
+          </div>
+          <div class="modal-field">
+            <span class="field-lbl">🛡️ PREVENTION</span>
+            <p class="field-val" id="modal-prevention"></p>
+          </div>
+          <div class="modal-field">
+            <span class="field-lbl">💉 ASSOCIATED MEDICINE</span>
+            <p class="field-val highlight-med" id="modal-medicine"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-modal-action" id="modal-ok-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Minimal Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-main-row">
+        <div class="footer-brand">
+          <div class="footer-brand-title">🏥 Smart Medical Search</div>
+          <p class="footer-brand-tagline">Algorithm-powered medical information search.</p>
+        </div>
+
+        <nav class="footer-nav">
+          <a href="#search-section">Disease Search</a>
+          <a href="#kmp-section">Symptom Search</a>
+          <a href="#how-it-works">How It Works</a>
+          <a href="#algorithms-section">Algorithms</a>
+          <a href="#dataset-section">Dataset</a>
+        </nav>
+      </div>
+
+      <div class="footer-bottom-row">
+        <p>Powered by Python • Trie • Binary Search • KMP</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
